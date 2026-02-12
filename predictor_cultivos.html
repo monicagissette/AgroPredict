@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor de Cultivos Agrícolas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-group {
+            margin-bottom: 30px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .slider-value {
+            background: #ecf0f1;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #2c3e50;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #dfe6e9;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.6);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.6);
+        }
+
+        .predict-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+            margin: 40px 0 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .predict-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(52, 152, 219, 0.4);
+        }
+
+        .predict-button:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            display: none;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 3px solid #2ecc71;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-crop {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .result-details {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .crop-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .result-crop {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌾 Predictor de Cultivos Agrícolas</h1>
+            <p>Sistema inteligente de recomendación basado en condiciones del suelo y clima</p>
+        </div>
+
+        <div class="content">
+            <div class="section-title">
+                🧪 Configura las condiciones de tu campo
+            </div>
+
+            <div class="info-box">
+                💡 <strong>Instrucción:</strong> Ajusta los valores según las condiciones de tu terreno para obtener una recomendación de cultivo óptima.
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Nitrógeno (N)</span>
+                    <span class="slider-value" id="n-value">50</span>
+                </div>
+                <input type="range" id="nitrogen" min="0" max="140" value="50" step="1">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Fósforo (P)</span>
+                    <span class="slider-value" id="p-value">50</span>
+                </div>
+                <input type="range" id="phosphorus" min="5" max="145" value="50" step="1">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Potasio (K)</span>
+                    <span class="slider-value" id="k-value">50</span>
+                </div>
+                <input type="range" id="potassium" min="5" max="205" value="50" step="1">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Temperatura (°C)</span>
+                    <span class="slider-value" id="temp-value">25.0</span>
+                </div>
+                <input type="range" id="temperature" min="8" max="45" value="25" step="0.1">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Humedad (%)</span>
+                    <span class="slider-value" id="hum-value">60.0</span>
+                </div>
+                <input type="range" id="humidity" min="14" max="100" value="60" step="0.1">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>pH del Suelo</span>
+                    <span class="slider-value" id="ph-value">6.5</span>
+                </div>
+                <input type="range" id="ph" min="3.5" max="10" value="6.5" step="0.1">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Lluvia (mm)</span>
+                    <span class="slider-value" id="rain-value">100.0</span>
+                </div>
+                <input type="range" id="rainfall" min="20" max="300" value="100" step="0.1">
+            </div>
+
+            <button class="predict-button" onclick="predictCrop()">
+                🌱 ¡Recomendar Cultivo!
+            </button>
+
+            <div id="result" class="result-container">
+                <div class="result-title">
+                    📊 RECOMENDACIÓN TÉCNICA
+                </div>
+                <div class="crop-icon" id="crop-icon"></div>
+                <div class="result-crop" id="crop-name"></div>
+                <div class="result-details">
+                    <div class="detail-row">
+                        <span class="detail-label">pH del Suelo:</span>
+                        <span class="detail-value" id="result-ph"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Humedad:</span>
+                        <span class="detail-value" id="result-humidity"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Temperatura:</span>
+                        <span class="detail-value" id="result-temp"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Precipitación:</span>
+                        <span class="detail-value" id="result-rain"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">NPK:</span>
+                        <span class="detail-value" id="result-npk"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Actualizar valores de los sliders
+        const sliders = [
+            { id: 'nitrogen', valueId: 'n-value' },
+            { id: 'phosphorus', valueId: 'p-value' },
+            { id: 'potassium', valueId: 'k-value' },
+            { id: 'temperature', valueId: 'temp-value' },
+            { id: 'humidity', valueId: 'hum-value' },
+            { id: 'ph', valueId: 'ph-value' },
+            { id: 'rainfall', valueId: 'rain-value' }
+        ];
+
+        sliders.forEach(slider => {
+            const element = document.getElementById(slider.id);
+            const valueElement = document.getElementById(slider.valueId);
+            
+            element.addEventListener('input', function() {
+                valueElement.textContent = parseFloat(this.value).toFixed(1);
+            });
+        });
+
+        // Iconos de cultivos
+        const cropIcons = {
+            'rice': '🌾',
+            'maize': '🌽',
+            'chickpea': '🫘',
+            'kidneybeans': '🫘',
+            'pigeonpeas': '🫘',
+            'mothbeans': '🫘',
+            'mungbean': '🫘',
+            'blackgram': '🫘',
+            'lentil': '🫘',
+            'pomegranate': '🍎',
+            'banana': '🍌',
+            'mango': '🥭',
+            'grapes': '🍇',
+            'watermelon': '🍉',
+            'muskmelon': '🍈',
+            'apple': '🍎',
+            'orange': '🍊',
+            'papaya': '🍊',
+            'coconut': '🥥',
+            'cotton': '🌸',
+            'jute': '🌿',
+            'coffee': '☕'
+        };
+
+        // Modelo de predicción simplificado basado en reglas
+        function predictCrop() {
+            const N = parseFloat(document.getElementById('nitrogen').value);
+            const P = parseFloat(document.getElementById('phosphorus').value);
+            const K = parseFloat(document.getElementById('potassium').value);
+            const temp = parseFloat(document.getElementById('temperature').value);
+            const humidity = parseFloat(document.getElementById('humidity').value);
+            const ph = parseFloat(document.getElementById('ph').value);
+            const rainfall = parseFloat(document.getElementById('rainfall').value);
+
+            let crop = '';
+            
+            // Reglas de predicción basadas en características típicas de cultivos
+            if (temp > 30 && humidity > 80 && rainfall > 200) {
+                crop = 'rice';
+            } else if (temp > 25 && temp < 35 && humidity > 65 && rainfall > 100) {
+                crop = 'banana';
+            } else if (temp > 20 && temp < 30 && N > 80 && rainfall > 60 && rainfall < 110) {
+                crop = 'maize';
+            } else if (temp > 17 && temp < 27 && humidity < 70 && rainfall < 100) {
+                crop = 'chickpea';
+            } else if (temp > 20 && temp < 35 && rainfall > 150 && K > 100) {
+                crop = 'cotton';
+            } else if (temp > 25 && temp < 35 && humidity > 50 && ph > 5.5 && ph < 7) {
+                crop = 'coffee';
+            } else if (temp > 10 && temp < 24 && humidity < 65 && ph > 6 && ph < 7.5) {
+                crop = 'apple';
+            } else if (temp > 30 && humidity > 70 && rainfall > 100 && rainfall < 200) {
+                crop = 'mango';
+            } else if (temp > 25 && humidity > 65 && rainfall > 50 && rainfall < 100) {
+                crop = 'watermelon';
+            } else if (temp > 15 && temp < 35 && K > 150) {
+                crop = 'grapes';
+            } else if (temp > 20 && temp < 30 && N > 60 && P > 60) {
+                crop = 'pomegranate';
+            } else if (temp > 25 && humidity > 80 && rainfall > 180) {
+                crop = 'coconut';
+            } else if (temp > 25 && humidity > 60 && humidity < 80 && rainfall > 80) {
+                crop = 'orange';
+            } else if (temp > 25 && temp < 38 && humidity > 60 && rainfall > 100) {
+                crop = 'papaya';
+            } else if (temp > 24 && humidity > 65 && rainfall < 60) {
+                crop = 'kidneybeans';
+            } else if (temp > 18 && temp < 30 && humidity < 70 && rainfall < 80) {
+                crop = 'pigeonpeas';
+            } else if (temp > 25 && temp < 35 && humidity > 60 && rainfall > 60 && rainfall < 100) {
+                crop = 'mothbeans';
+            } else if (temp > 25 && temp < 35 && humidity > 70 && rainfall > 60 && rainfall < 100) {
+                crop = 'mungbean';
+            } else if (temp > 25 && temp < 35 && humidity > 60 && rainfall > 50 && rainfall < 90) {
+                crop = 'blackgram';
+            } else if (temp > 15 && temp < 25 && humidity < 70 && rainfall < 80) {
+                crop = 'lentil';
+            } else if (temp > 24 && temp < 27 && humidity > 80 && rainfall > 100) {
+                crop = 'jute';
+            } else if (temp > 27 && humidity > 70 && rainfall > 90 && rainfall < 130) {
+                crop = 'muskmelon';
+            } else {
+                // Valor por defecto basado en condiciones generales
+                if (temp < 20) {
+                    crop = 'lentil';
+                } else if (humidity > 80) {
+                    crop = 'rice';
+                } else if (rainfall < 60) {
+                    crop = 'chickpea';
+                } else {
+                    crop = 'maize';
+                }
+            }
+
+            // Mostrar resultado
+            document.getElementById('crop-name').textContent = crop.toUpperCase();
+            document.getElementById('crop-icon').textContent = cropIcons[crop] || '🌱';
+            document.getElementById('result-ph').textContent = ph.toFixed(1);
+            document.getElementById('result-humidity').textContent = humidity.toFixed(1) + '%';
+            document.getElementById('result-temp').textContent = temp.toFixed(1) + '°C';
+            document.getElementById('result-rain').textContent = rainfall.toFixed(1) + ' mm';
+            document.getElementById('result-npk').textContent = `N:${N} / P:${P} / K:${K}`;
+            
+            document.getElementById('result').classList.add('show');
+            
+            // Scroll suave al resultado
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>
